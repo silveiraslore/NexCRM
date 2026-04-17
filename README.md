@@ -1,4 +1,3 @@
-````md
 # NexCRM
 
 🚀 **NexCRM** is a mini CRM (Customer Relationship Management) system with integrated Artificial Intelligence, built to demonstrate a full workflow of CRUD operations, external API consumption, and AI-powered automation.

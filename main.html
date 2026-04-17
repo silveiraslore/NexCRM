@@ -1,0 +1,1910 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexCRM — Gestão Inteligente</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --surface3: #22222f;
+    --border: #2a2a3a;
+    --border-bright: #3a3a55;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --accent3: #43e8b0;
+    --text: #e8e8f0;
+    --text2: #9090b0;
+    --text3: #5a5a7a;
+    --glow: rgba(108, 99, 255, 0.15);
+    --glow2: rgba(67, 232, 176, 0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 20%, rgba(108,99,255,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 80% 80%, rgba(67,232,176,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 30% at 60% 10%, rgba(255,101,132,0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+    animation: bgShift 20s ease-in-out infinite alternate;
+  }
+
+  @keyframes bgShift {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    100% { transform: translate(-2%, 2%) rotate(1deg); }
+  }
+
+  /* Grid noise overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── LAYOUT ─── */
+  .shell {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    grid-template-rows: auto 1fr;
+    min-height: 100vh;
+  }
+
+  /* ─── TOPBAR ─── */
+  .topbar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    height: 60px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,15,0.8);
+    backdrop-filter: blur(20px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-mark {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: white;
+    position: relative;
+  }
+
+  .logo-mark::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    z-index: -1;
+    opacity: 0.3;
+    filter: blur(6px);
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .user-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px 5px 5px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    font-size: 0.82rem;
+    color: var(--text2);
+  }
+
+  .user-chip:hover { border-color: var(--accent); }
+
+  .avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: white;
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent3);
+    box-shadow: 0 0 6px var(--accent3);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.85); }
+  }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    padding: 20px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: rgba(17,17,24,0.5);
+  }
+
+  .nav-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 12px 12px 6px;
+    margin-top: 8px;
+  }
+
+  .nav-label:first-child { margin-top: 0; }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.875rem;
+    color: var(--text2);
+    border: 1px solid transparent;
+    font-weight: 400;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .nav-item:hover {
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  .nav-item.active {
+    background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(67,232,176,0.08));
+    border-color: rgba(108,99,255,0.3);
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 20%;
+    height: 60%;
+    width: 3px;
+    background: linear-gradient(to bottom, var(--accent), var(--accent3));
+    border-radius: 0 2px 2px 0;
+  }
+
+  .nav-icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; }
+
+  .nav-badge {
+    margin-left: auto;
+    background: var(--accent);
+    color: white;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+  }
+
+  /* ─── MAIN ─── */
+  .main {
+    overflow-y: auto;
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* ─── PAGE HEADER ─── */
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+  }
+
+  .page-subtitle {
+    font-size: 0.82rem;
+    color: var(--text3);
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ─── KPI CARDS ─── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+    cursor: default;
+  }
+
+  .kpi-card:hover {
+    border-color: var(--border-bright);
+    transform: translateY(-2px);
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 16px;
+    right: 16px;
+    height: 2px;
+    border-radius: 0 0 2px 2px;
+    opacity: 0.8;
+  }
+
+  .kpi-card:nth-child(1)::before { background: linear-gradient(90deg, var(--accent), transparent); }
+  .kpi-card:nth-child(2)::before { background: linear-gradient(90deg, var(--accent3), transparent); }
+  .kpi-card:nth-child(3)::before { background: linear-gradient(90deg, var(--accent2), transparent); }
+  .kpi-card:nth-child(4)::before { background: linear-gradient(90deg, #ffd700, transparent); }
+
+  .kpi-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+    margin-bottom: 10px;
+  }
+
+  .kpi-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+
+  .kpi-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin-top: 8px;
+    font-size: 0.75rem;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .kpi-delta.up { color: var(--accent3); }
+  .kpi-delta.down { color: var(--accent2); }
+
+  /* ─── TOOLBAR ─── */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .search-box {
+    flex: 1;
+    max-width: 340px;
+    position: relative;
+  }
+
+  .search-box input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 9px 14px 9px 38px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-box input:focus { border-color: var(--accent); }
+  .search-box input::placeholder { color: var(--text3); }
+
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3);
+    font-size: 0.875rem;
+  }
+
+  .filter-select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 9px 12px;
+    color: var(--text2);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem;
+    outline: none;
+    cursor: pointer;
+  }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #8b83ff);
+    color: white;
+    box-shadow: 0 4px 16px rgba(108,99,255,0.3);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(108,99,255,0.4);
+  }
+
+  .btn-ghost {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+  }
+
+  .btn-ghost:hover { border-color: var(--border-bright); color: var(--text); }
+
+  .btn-ai {
+    background: linear-gradient(135deg, rgba(67,232,176,0.15), rgba(108,99,255,0.15));
+    border: 1px solid rgba(67,232,176,0.3);
+    color: var(--accent3);
+    font-weight: 500;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-ai::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(67,232,176,0.1), rgba(108,99,255,0.1));
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .btn-ai:hover::after { opacity: 1; }
+  .btn-ai:hover { border-color: var(--accent3); }
+
+  .btn-danger {
+    background: rgba(255,101,132,0.1);
+    border: 1px solid rgba(255,101,132,0.25);
+    color: var(--accent2);
+  }
+
+  .btn-danger:hover { background: rgba(255,101,132,0.18); }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  .btn-sm { padding: 6px 11px; font-size: 0.8rem; }
+
+  /* ─── TABLE ─── */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead tr {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    padding: 12px 16px;
+    text-align: left;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s;
+    white-space: nowrap;
+  }
+
+  th:hover { color: var(--text2); }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+
+  td {
+    padding: 13px 16px;
+    font-size: 0.875rem;
+    color: var(--text2);
+    vertical-align: middle;
+  }
+
+  .td-name {
+    font-weight: 500;
+    color: var(--text);
+    font-size: 0.9rem;
+  }
+
+  .td-email {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--text3);
+  }
+
+  /* ─── BADGES ─── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    border: 1px solid transparent;
+  }
+
+  .badge-dot { width: 5px; height: 5px; border-radius: 50%; }
+
+  .badge-active { background: rgba(67,232,176,0.1); color: var(--accent3); border-color: rgba(67,232,176,0.2); }
+  .badge-active .badge-dot { background: var(--accent3); box-shadow: 0 0 4px var(--accent3); }
+
+  .badge-inactive { background: rgba(90,90,122,0.15); color: var(--text3); border-color: var(--border); }
+  .badge-inactive .badge-dot { background: var(--text3); }
+
+  .badge-lead { background: rgba(255,215,0,0.1); color: #ffd700; border-color: rgba(255,215,0,0.2); }
+  .badge-lead .badge-dot { background: #ffd700; }
+
+  .badge-high { background: rgba(255,101,132,0.1); color: var(--accent2); border-color: rgba(255,101,132,0.2); }
+  .badge-med { background: rgba(255,180,0,0.1); color: #ffb400; border-color: rgba(255,180,0,0.2); }
+  .badge-low { background: rgba(108,99,255,0.1); color: var(--accent); border-color: rgba(108,99,255,0.2); }
+
+  /* ─── ACTIONS ─── */
+  .row-actions { display: flex; gap: 6px; align-items: center; }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,10,0.7);
+    backdrop-filter: blur(8px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border-bright);
+    border-radius: 20px;
+    padding: 28px;
+    width: 100%;
+    max-width: 520px;
+    transform: scale(0.96) translateY(10px);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-overlay.open .modal { transform: scale(1) translateY(0); }
+
+  .modal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .modal-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .modal-close {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .modal-close:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  /* ─── FORM ─── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-full { grid-column: 1 / -1; }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+  label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+  }
+
+  input[type="text"], input[type="email"], input[type="tel"], select, textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  input::placeholder, textarea::placeholder { color: var(--text3); }
+  textarea { resize: vertical; min-height: 80px; }
+
+  .form-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ─── AI PANEL ─── */
+  .ai-panel {
+    background: linear-gradient(135deg, rgba(67,232,176,0.05), rgba(108,99,255,0.05));
+    border: 1px solid rgba(67,232,176,0.2);
+    border-radius: 14px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ai-panel::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(67,232,176,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .ai-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .ai-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(67,232,176,0.1);
+    border: 1px solid rgba(67,232,176,0.25);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent3);
+    letter-spacing: 0.05em;
+  }
+
+  .ai-result {
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: var(--text2);
+    min-height: 60px;
+  }
+
+  .ai-result.loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text3);
+    font-style: italic;
+  }
+
+  .ai-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent3);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── TASKS ─── */
+  .tasks-col { display: flex; flex-direction: column; gap: 10px; }
+
+  .task-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    cursor: grab;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .task-card:hover {
+    border-color: var(--border-bright);
+    transform: translateX(3px);
+  }
+
+  .task-card.done { opacity: 0.5; }
+  .task-card.done .task-title { text-decoration: line-through; }
+
+  .task-check {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border-bright);
+    border-radius: 6px;
+    flex-shrink: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    margin-top: 1px;
+  }
+
+  .task-check.checked {
+    background: var(--accent3);
+    border-color: var(--accent3);
+  }
+
+  .task-check.checked::after { content: '✓'; color: var(--bg); font-size: 0.7rem; font-weight: 700; }
+
+  .task-body { flex: 1; min-width: 0; }
+
+  .task-title {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .task-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .task-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text3);
+  }
+
+  .task-actions { display: flex; gap: 6px; margin-left: auto; }
+
+  /* ─── WEATHER WIDGET ─── */
+  .weather-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .weather-main { display: flex; align-items: center; gap: 14px; }
+
+  .weather-icon {
+    font-size: 2.5rem;
+    filter: drop-shadow(0 2px 8px rgba(255,200,50,0.3));
+  }
+
+  .weather-temp {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+  }
+
+  .weather-city {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text3);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .weather-details {
+    display: flex;
+    gap: 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text3);
+  }
+
+  /* ─── DASHBOARD CHARTS PLACEHOLDER ─── */
+  .chart-bar {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 60px;
+    padding-bottom: 4px;
+  }
+
+  .bar {
+    flex: 1;
+    border-radius: 4px 4px 0 0;
+    background: linear-gradient(to top, var(--accent), rgba(108,99,255,0.3));
+    transition: opacity 0.15s;
+    min-height: 4px;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .bar:hover { opacity: 0.8; }
+
+  /* ─── SECTION HEADER ─── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  /* ─── EMPTY STATE ─── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text3);
+  }
+
+  .empty-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4; }
+  .empty-text { font-size: 0.875rem; }
+
+  /* ─── TOAST ─── */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 999;
+  }
+
+  .toast {
+    background: var(--surface2);
+    border: 1px solid var(--border-bright);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 0.875rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 260px;
+    animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  @keyframes slideIn {
+    from { transform: translateX(20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .toast-icon { font-size: 1rem; }
+
+  /* ─── PAGES ─── */
+  .page { display: none; }
+  .page.active { display: contents; }
+
+  /* ─── PRIORITY INDICATOR ─── */
+  .priority-bar {
+    width: 3px;
+    border-radius: 2px;
+    position: absolute;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+  }
+
+  .priority-bar.high { background: var(--accent2); box-shadow: 0 0 8px var(--accent2); }
+  .priority-bar.med { background: #ffb400; }
+  .priority-bar.low { background: var(--accent); }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 10px; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ─── SECTION DIVIDER ─── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
+  }
+
+  /* ─── TWO COL LAYOUT ─── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  @media (max-width: 1100px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ─── BOTTOM ACTIONS ─── */
+  .bottom-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="logo">
+      <div class="logo-mark">N</div>
+      NexCRM
+    </div>
+    <div class="topbar-right">
+      <div style="display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--text3);">
+        <span class="status-dot"></span> IA Conectada
+      </div>
+      <div class="user-chip">
+        <div class="avatar">A</div>
+        Admin
+      </div>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <span class="nav-label">Principal</span>
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <span class="nav-icon">◈</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="showPage('clientes')">
+      <span class="nav-icon">◉</span> Clientes
+      <span class="nav-badge" id="badge-clientes">4</span>
+    </div>
+    <div class="nav-item" onclick="showPage('tarefas')">
+      <span class="nav-icon">◫</span> Tarefas
+      <span class="nav-badge" id="badge-tarefas">5</span>
+    </div>
+
+    <span class="nav-label">Análise</span>
+    <div class="nav-item" onclick="showPage('ia')">
+      <span class="nav-icon">✦</span> Central de IA
+    </div>
+    <div class="nav-item" onclick="showPage('weather')">
+      <span class="nav-icon">◍</span> Clima / Ext.
+    </div>
+
+    <span class="nav-label">Sistema</span>
+    <div class="nav-item" onclick="showToast('⚙️', 'Configurações em desenvolvimento')">
+      <span class="nav-icon">⚙</span> Configurações
+    </div>
+    <div class="nav-item" onclick="showToast('👋', 'Sessão encerrada com sucesso')">
+      <span class="nav-icon">↩</span> Sair
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main" id="main-content">
+
+    <!-- ══════════════════════ DASHBOARD PAGE ══════════════════════ -->
+    <div class="page active" id="page-dashboard">
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-subtitle">// visão geral do sistema</p>
+        </div>
+        <button class="btn btn-ai" onclick="runAIDashboard()">✦ Análise Rápida IA</button>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-label">Clientes</div>
+          <div class="kpi-value" id="kpi-clientes">4</div>
+          <div class="kpi-delta up">↑ 12% este mês</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Tarefas Ativas</div>
+          <div class="kpi-value" id="kpi-tarefas">5</div>
+          <div class="kpi-delta up">↑ 3 novas</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Concluídas</div>
+          <div class="kpi-value" id="kpi-done">0</div>
+          <div class="kpi-delta down">↓ pendente</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Score IA</div>
+          <div class="kpi-value" style="color:var(--accent3)">87</div>
+          <div class="kpi-delta up" style="color:var(--accent3)">↑ produtividade</div>
+        </div>
+      </div>
+
+      <!-- Charts row -->
+      <div class="two-col">
+        <div class="table-wrap" style="padding:20px;">
+          <div class="section-header">
+            <span class="section-title">Clientes por Status</span>
+          </div>
+          <div class="chart-bar" id="chart-status" style="height:80px;align-items:flex-end;"></div>
+          <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;" id="chart-legend"></div>
+        </div>
+
+        <div class="ai-panel">
+          <div class="ai-header">
+            <span class="section-title">✦ Análise IA</span>
+            <span class="ai-chip">✦ claude</span>
+          </div>
+          <div class="ai-result" id="ai-dashboard-result">
+            Clique em <strong>Análise Rápida IA</strong> para gerar um resumo executivo do estado atual do sistema.
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent activity -->
+      <div class="table-wrap">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+          <span class="section-title">Clientes Recentes</span>
+          <button class="btn btn-ghost btn-sm" onclick="showPage('clientes')">Ver todos →</button>
+        </div>
+        <div id="dash-recent-clients"></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════ CLIENTES PAGE ══════════════════════ -->
+    <div class="page" id="page-clientes">
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Clientes</h1>
+          <p class="page-subtitle">// gestão completa de clientes</p>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-ai btn-sm" onclick="openAIClientPanel()">✦ Resumo IA</button>
+          <button class="btn btn-primary" onclick="openModal('modal-cliente')">+ Novo Cliente</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-box">
+          <span class="search-icon">⌕</span>
+          <input type="text" id="search-clientes" placeholder="Buscar por nome, email..." oninput="renderClientes()">
+        </div>
+        <select class="filter-select" id="filter-status" onchange="renderClientes()">
+          <option value="">Todos os status</option>
+          <option value="Ativo">Ativo</option>
+          <option value="Inativo">Inativo</option>
+          <option value="Lead">Lead</option>
+        </select>
+        <select class="filter-select" id="sort-clientes" onchange="renderClientes()">
+          <option value="name">Nome ↑</option>
+          <option value="name-desc">Nome ↓</option>
+          <option value="priority">Prioridade</option>
+          <option value="date">Data</option>
+        </select>
+      </div>
+
+      <div class="table-wrap" id="clientes-table"></div>
+
+      <!-- AI Panel for clients -->
+      <div class="ai-panel" id="ai-client-panel" style="display:none;">
+        <div class="ai-header">
+          <span class="section-title">✦ Resumo IA dos Clientes</span>
+          <span class="ai-chip">✦ claude</span>
+        </div>
+        <div class="ai-result" id="ai-client-result">Analisando clientes...</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════ TAREFAS PAGE ══════════════════════ -->
+    <div class="page" id="page-tarefas">
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Tarefas</h1>
+          <p class="page-subtitle">// gestão de atividades</p>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-ai btn-sm" onclick="openAITaskPanel()">✦ Priorizar IA</button>
+          <button class="btn btn-primary" onclick="openModal('modal-tarefa')">+ Nova Tarefa</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-box">
+          <span class="search-icon">⌕</span>
+          <input type="text" id="search-tarefas" placeholder="Buscar tarefas..." oninput="renderTarefas()">
+        </div>
+        <select class="filter-select" id="filter-prio" onchange="renderTarefas()">
+          <option value="">Todas prioridades</option>
+          <option value="Alta">Alta</option>
+          <option value="Média">Média</option>
+          <option value="Baixa">Baixa</option>
+        </select>
+        <select class="filter-select" id="filter-tarefa-status" onchange="renderTarefas()">
+          <option value="">Todos</option>
+          <option value="pendente">Pendentes</option>
+          <option value="done">Concluídas</option>
+        </select>
+      </div>
+
+      <div class="tasks-col" id="tasks-list"></div>
+
+      <div class="ai-panel" id="ai-task-panel" style="display:none;">
+        <div class="ai-header">
+          <span class="section-title">✦ Priorização Inteligente</span>
+          <span class="ai-chip">✦ claude</span>
+        </div>
+        <div class="ai-result" id="ai-task-result">Analisando tarefas...</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════ IA CENTRAL PAGE ══════════════════════ -->
+    <div class="page" id="page-ia">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Central de IA</h1>
+          <p class="page-subtitle">// análise inteligente com Claude</p>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="ai-panel" style="min-height:200px;">
+          <div class="ai-header">
+            <span class="section-title">✦ Resumo de Clientes</span>
+            <span class="ai-chip">✦ claude</span>
+          </div>
+          <div class="ai-result" id="ai-full-clients">Clique abaixo para analisar todos os clientes.</div>
+          <div style="margin-top:16px;">
+            <button class="btn btn-ai" onclick="runAIClients()">✦ Gerar Resumo</button>
+          </div>
+        </div>
+
+        <div class="ai-panel" style="min-height:200px;">
+          <div class="ai-header">
+            <span class="section-title">✦ Priorização de Tarefas</span>
+            <span class="ai-chip">✦ claude</span>
+          </div>
+          <div class="ai-result" id="ai-full-tasks">Clique abaixo para priorizar todas as tarefas.</div>
+          <div style="margin-top:16px;">
+            <button class="btn btn-ai" onclick="runAITasks()">✦ Priorizar Tarefas</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ai-panel" style="min-height:160px;">
+        <div class="ai-header">
+          <span class="section-title">✦ Consulta Livre</span>
+          <span class="ai-chip">✦ claude</span>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:14px;">
+          <input type="text" id="ai-free-input" placeholder="Faça uma pergunta sobre seu CRM..." style="flex:1;">
+          <button class="btn btn-ai" onclick="runAIFree()">✦ Enviar</button>
+        </div>
+        <div class="ai-result" id="ai-free-result">Faça uma pergunta sobre seus dados, clientes ou tarefas.</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════ CLIMA PAGE ══════════════════════ -->
+    <div class="page" id="page-weather">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Clima & Externo</h1>
+          <p class="page-subtitle">// API de previsão do tempo</p>
+        </div>
+        <button class="btn btn-ghost" onclick="fetchWeather()">↻ Atualizar</button>
+      </div>
+
+      <div class="two-col">
+        <div class="weather-card">
+          <div class="weather-main">
+            <div class="weather-icon" id="w-icon">⛅</div>
+            <div>
+              <div class="weather-temp" id="w-temp">--°C</div>
+              <div class="weather-city" id="w-city">carregando...</div>
+              <div style="font-size:0.82rem;color:var(--text2);margin-top:4px;" id="w-desc">--</div>
+            </div>
+          </div>
+          <div class="weather-details">
+            <div><div style="color:var(--text);" id="w-humid">--%</div>Umidade</div>
+            <div><div style="color:var(--text);" id="w-wind">-- km/h</div>Vento</div>
+            <div><div style="color:var(--text);" id="w-feels">--°C</div>Sensação</div>
+          </div>
+        </div>
+
+        <div class="ai-panel">
+          <div class="ai-header">
+            <span class="section-title">✦ Impacto Climático</span>
+            <span class="ai-chip">✦ claude</span>
+          </div>
+          <div class="ai-result" id="ai-weather-result">
+            Carregue o clima para ver como ele pode afetar suas tarefas externas.
+          </div>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="padding:20px;">
+        <div class="section-header">
+          <span class="section-title">Tarefas Externas Impactadas</span>
+        </div>
+        <div id="external-tasks" class="tasks-col"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══════════════════════ MODALS ══════════════════════ -->
+
+<!-- Modal Novo Cliente -->
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-cliente-title">Novo Cliente</span>
+      <button class="modal-close" onclick="closeModal('modal-cliente')">✕</button>
+    </div>
+    <div class="form-grid">
+      <input type="hidden" id="cliente-edit-id">
+      <div class="form-group">
+        <label>Nome</label>
+        <input type="text" id="c-nome" placeholder="Nome completo">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="c-email" placeholder="email@exemplo.com">
+      </div>
+      <div class="form-group">
+        <label>Telefone</label>
+        <input type="tel" id="c-tel" placeholder="+55 11 9 0000-0000">
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="c-status">
+          <option>Ativo</option>
+          <option>Inativo</option>
+          <option>Lead</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Prioridade</label>
+        <select id="c-prioridade">
+          <option>Alta</option>
+          <option>Média</option>
+          <option>Baixa</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Segmento</label>
+        <input type="text" id="c-segmento" placeholder="Ex: Saúde, Tech...">
+      </div>
+      <div class="form-group form-full">
+        <label>Histórico / Notas</label>
+        <textarea id="c-notas" placeholder="Informações relevantes sobre o cliente..."></textarea>
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-cliente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCliente()">Salvar Cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Nova Tarefa -->
+<div class="modal-overlay" id="modal-tarefa">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-tarefa-title">Nova Tarefa</span>
+      <button class="modal-close" onclick="closeModal('modal-tarefa')">✕</button>
+    </div>
+    <div class="form-grid">
+      <input type="hidden" id="tarefa-edit-id">
+      <div class="form-group form-full">
+        <label>Título da Tarefa</label>
+        <input type="text" id="t-titulo" placeholder="Descreva a tarefa...">
+      </div>
+      <div class="form-group">
+        <label>Prioridade</label>
+        <select id="t-prioridade">
+          <option>Alta</option>
+          <option>Média</option>
+          <option>Baixa</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Data Limite</label>
+        <input type="text" id="t-data" placeholder="Ex: 2025-07-10">
+      </div>
+      <div class="form-group">
+        <label>Categoria</label>
+        <select id="t-categoria">
+          <option>Interno</option>
+          <option>Externo</option>
+          <option>Reunião</option>
+          <option>Entrega</option>
+          <option>Follow-up</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Cliente Vinculado</label>
+        <select id="t-cliente"></select>
+      </div>
+      <div class="form-group form-full">
+        <label>Descrição</label>
+        <textarea id="t-desc" placeholder="Detalhes adicionais..."></textarea>
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-tarefa')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveTarefa()">Salvar Tarefa</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal AI por cliente -->
+<div class="modal-overlay" id="modal-ai-client">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <span class="modal-title">✦ Resumo IA do Cliente</span>
+      <button class="modal-close" onclick="closeModal('modal-ai-client')">✕</button>
+    </div>
+    <div class="ai-panel" style="background:transparent;border:none;padding:0;">
+      <div class="ai-result" id="modal-ai-client-result" style="min-height:120px;">Gerando...</div>
+    </div>
+    <div class="form-footer" style="padding-top:16px;">
+      <button class="btn btn-ghost" onclick="closeModal('modal-ai-client')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let clientes = [
+  { id: 1, nome: 'Ana Souza', email: 'ana@nexcrm.io', tel: '+55 11 9 8765-4321', status: 'Ativo', prioridade: 'Alta', segmento: 'Saúde', notas: 'Cliente VIP com histórico de 3 projetos. Último contato: renovação de contrato anual. Interesse em plano premium.', date: '2025-06-01' },
+  { id: 2, nome: 'Bruno Lima',  email: 'bruno@techco.dev', tel: '+55 21 9 9000-1234', status: 'Lead', prioridade: 'Média', segmento: 'Tech', notas: 'Prospect identificado via LinkedIn. Interesse em automação de processos. Aguardando proposta comercial.', date: '2025-06-10' },
+  { id: 3, nome: 'Carla Melo',  email: 'carla@startup.io', tel: '+55 31 9 7654-3210', status: 'Ativo', prioridade: 'Baixa', segmento: 'Startup', notas: 'Contratou pacote básico. Uso regular da plataforma. Potencial de upgrade em Q3.', date: '2025-05-20' },
+  { id: 4, nome: 'Diego Costa', email: 'diego@logist.com', tel: '+55 41 9 5555-6666', status: 'Inativo', prioridade: 'Alta', segmento: 'Logística', notas: 'Contrato encerrado em março. Motivo: budget reduzido. Possível retorno em Q4 conforme email de retenção.', date: '2025-03-15' },
+];
+
+let tarefas = [
+  { id: 1, titulo: 'Enviar proposta renovação para Ana Souza', prioridade: 'Alta', data: '2025-07-05', categoria: 'Entrega', cliente: 'Ana Souza', desc: 'Preparar proposta personalizada com desconto de fidelidade e novos recursos.', done: false },
+  { id: 2, titulo: 'Reunião de qualificação com Bruno Lima', prioridade: 'Alta', data: '2025-07-08', categoria: 'Reunião', cliente: 'Bruno Lima', desc: 'Agendar call de 30 min para entender necessidades específicas de automação.', done: false },
+  { id: 3, titulo: 'Follow-up Carla Melo — upgrade de plano', prioridade: 'Média', data: '2025-07-15', categoria: 'Follow-up', cliente: 'Carla Melo', desc: 'Apresentar benefícios do plano Pro. Preparar comparativo de funcionalidades.', done: false },
+  { id: 4, titulo: 'Visita técnica externa — datacenter SP', prioridade: 'Alta', data: '2025-07-12', categoria: 'Externo', cliente: 'Ana Souza', desc: 'Inspeção de infraestrutura para integração. Depende de condições climáticas.', done: false },
+  { id: 5, titulo: 'Revisar documentação de API interna', prioridade: 'Baixa', data: '2025-07-20', categoria: 'Interno', cliente: '', desc: 'Atualizar swagger docs e adicionar exemplos de uso real.', done: false },
+];
+
+let nextClientId = 5;
+let nextTaskId = 6;
+let currentPage = 'dashboard';
+let weatherData = null;
+
+// ═══════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  const items = document.querySelectorAll('.nav-item');
+  items.forEach(item => {
+    if(item.getAttribute('onclick') && item.getAttribute('onclick').includes(page)) {
+      item.classList.add('active');
+    }
+  });
+  currentPage = page;
+  if(page === 'dashboard') { renderDashboard(); }
+  if(page === 'clientes') { renderClientes(); }
+  if(page === 'tarefas') { renderTarefas(); updateTaskClientSelect(); }
+  if(page === 'weather') { fetchWeather(); renderExternalTasks(); }
+}
+
+// ═══════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════
+function showToast(icon, msg) {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `<span class="toast-icon">${icon}</span> ${msg}`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(20px)'; t.style.transition='all 0.3s'; setTimeout(()=>t.remove(),300); }, 3000);
+}
+
+// ═══════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  if(id === 'modal-cliente') clearClienteForm();
+  if(id === 'modal-tarefa') clearTarefaForm();
+}
+
+function clearClienteForm() {
+  ['c-nome','c-email','c-tel','c-segmento','c-notas'].forEach(f => document.getElementById(f).value = '');
+  document.getElementById('c-status').value = 'Ativo';
+  document.getElementById('c-prioridade').value = 'Alta';
+  document.getElementById('cliente-edit-id').value = '';
+  document.getElementById('modal-cliente-title').textContent = 'Novo Cliente';
+}
+
+function clearTarefaForm() {
+  ['t-titulo','t-data','t-desc'].forEach(f => document.getElementById(f).value = '');
+  document.getElementById('t-prioridade').value = 'Alta';
+  document.getElementById('t-categoria').value = 'Interno';
+  document.getElementById('tarefa-edit-id').value = '';
+  document.getElementById('modal-tarefa-title').textContent = 'Nova Tarefa';
+}
+
+// ═══════════════════════════════════════
+// CLIENTES CRUD
+// ═══════════════════════════════════════
+function saveCliente() {
+  const nome = document.getElementById('c-nome').value.trim();
+  if (!nome) { showToast('⚠️', 'Nome é obrigatório'); return; }
+  const editId = document.getElementById('cliente-edit-id').value;
+  const data = {
+    nome, email: document.getElementById('c-email').value,
+    tel: document.getElementById('c-tel').value,
+    status: document.getElementById('c-status').value,
+    prioridade: document.getElementById('c-prioridade').value,
+    segmento: document.getElementById('c-segmento').value,
+    notas: document.getElementById('c-notas').value,
+    date: new Date().toISOString().split('T')[0]
+  };
+  if (editId) {
+    const idx = clientes.findIndex(c => c.id == editId);
+    clientes[idx] = { ...clientes[idx], ...data };
+    showToast('✅', 'Cliente atualizado com sucesso!');
+  } else {
+    clientes.push({ id: nextClientId++, ...data });
+    showToast('✅', 'Cliente criado com sucesso!');
+  }
+  closeModal('modal-cliente');
+  renderClientes(); updateBadges(); renderDashboard();
+}
+
+function editCliente(id) {
+  const c = clientes.find(x => x.id === id);
+  document.getElementById('cliente-edit-id').value = id;
+  document.getElementById('c-nome').value = c.nome;
+  document.getElementById('c-email').value = c.email;
+  document.getElementById('c-tel').value = c.tel;
+  document.getElementById('c-status').value = c.status;
+  document.getElementById('c-prioridade').value = c.prioridade;
+  document.getElementById('c-segmento').value = c.segmento;
+  document.getElementById('c-notas').value = c.notas;
+  document.getElementById('modal-cliente-title').textContent = 'Editar Cliente';
+  openModal('modal-cliente');
+}
+
+function deleteCliente(id) {
+  if (!confirm('Remover este cliente?')) return;
+  clientes = clientes.filter(c => c.id !== id);
+  renderClientes(); updateBadges(); renderDashboard();
+  showToast('🗑️', 'Cliente removido');
+}
+
+function renderClientes() {
+  const q = (document.getElementById('search-clientes')?.value || '').toLowerCase();
+  const st = document.getElementById('filter-status')?.value || '';
+  const sort = document.getElementById('sort-clientes')?.value || 'name';
+  let list = clientes.filter(c =>
+    (!q || c.nome.toLowerCase().includes(q) || c.email.toLowerCase().includes(q)) &&
+    (!st || c.status === st)
+  );
+  if(sort === 'name') list.sort((a,b) => a.nome.localeCompare(b.nome));
+  if(sort === 'name-desc') list.sort((a,b) => b.nome.localeCompare(a.nome));
+  if(sort === 'priority') { const o={Alta:0,Média:1,Baixa:2}; list.sort((a,b) => o[a.prioridade]-o[b.prioridade]); }
+  if(sort === 'date') list.sort((a,b) => new Date(b.date)-new Date(a.date));
+
+  const wrap = document.getElementById('clientes-table');
+  if(!list.length) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">◉</div><div class="empty-text">Nenhum cliente encontrado</div></div>`;
+    return;
+  }
+  const statusClass = s => s === 'Ativo' ? 'badge-active' : s === 'Inativo' ? 'badge-inactive' : 'badge-lead';
+  const prioClass = p => p === 'Alta' ? 'badge-high' : p === 'Média' ? 'badge-med' : 'badge-low';
+
+  wrap.innerHTML = `<table>
+    <thead><tr>
+      <th>Nome</th><th>Segmento</th><th>Status</th><th>Prioridade</th><th>Data</th><th>Ações</th>
+    </tr></thead>
+    <tbody>${list.map(c => `
+      <tr>
+        <td><div class="td-name">${c.nome}</div><div class="td-email">${c.email}</div></td>
+        <td>${c.segmento || '—'}</td>
+        <td><span class="badge ${statusClass(c.status)}"><span class="badge-dot"></span>${c.status}</span></td>
+        <td><span class="badge ${prioClass(c.prioridade)}">${c.prioridade}</span></td>
+        <td><span style="font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--text3)">${c.date}</span></td>
+        <td><div class="row-actions">
+          <button class="btn btn-ai btn-sm" onclick="aiResumoCliente(${c.id})">✦ IA</button>
+          <button class="btn btn-ghost btn-sm" onclick="editCliente(${c.id})">✎</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCliente(${c.id})">✕</button>
+        </div></td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+// ═══════════════════════════════════════
+// TAREFAS CRUD
+// ═══════════════════════════════════════
+function updateTaskClientSelect() {
+  const sel = document.getElementById('t-cliente');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">Nenhum</option>' + clientes.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
+}
+
+function saveTarefa() {
+  const titulo = document.getElementById('t-titulo').value.trim();
+  if (!titulo) { showToast('⚠️', 'Título é obrigatório'); return; }
+  const editId = document.getElementById('tarefa-edit-id').value;
+  const data = {
+    titulo,
+    prioridade: document.getElementById('t-prioridade').value,
+    data: document.getElementById('t-data').value,
+    categoria: document.getElementById('t-categoria').value,
+    cliente: document.getElementById('t-cliente').value,
+    desc: document.getElementById('t-desc').value,
+    done: false
+  };
+  if (editId) {
+    const idx = tarefas.findIndex(t => t.id == editId);
+    tarefas[idx] = { ...tarefas[idx], ...data };
+    showToast('✅', 'Tarefa atualizada!');
+  } else {
+    tarefas.push({ id: nextTaskId++, ...data });
+    showToast('✅', 'Tarefa criada!');
+  }
+  closeModal('modal-tarefa');
+  renderTarefas(); updateBadges(); renderDashboard();
+}
+
+function editTarefa(id) {
+  const t = tarefas.find(x => x.id === id);
+  updateTaskClientSelect();
+  document.getElementById('tarefa-edit-id').value = id;
+  document.getElementById('t-titulo').value = t.titulo;
+  document.getElementById('t-prioridade').value = t.prioridade;
+  document.getElementById('t-data').value = t.data;
+  document.getElementById('t-categoria').value = t.categoria;
+  document.getElementById('t-cliente').value = t.cliente;
+  document.getElementById('t-desc').value = t.desc;
+  document.getElementById('modal-tarefa-title').textContent = 'Editar Tarefa';
+  openModal('modal-tarefa');
+}
+
+function deleteTarefa(id) {
+  if (!confirm('Remover esta tarefa?')) return;
+  tarefas = tarefas.filter(t => t.id !== id);
+  renderTarefas(); updateBadges(); renderDashboard();
+  showToast('🗑️', 'Tarefa removida');
+}
+
+function toggleTarefa(id) {
+  const t = tarefas.find(x => x.id === id);
+  t.done = !t.done;
+  renderTarefas(); updateBadges();
+  showToast(t.done ? '✅' : '↩️', t.done ? 'Tarefa concluída!' : 'Tarefa reaberta');
+}
+
+function renderTarefas() {
+  const q = (document.getElementById('search-tarefas')?.value || '').toLowerCase();
+  const prio = document.getElementById('filter-prio')?.value || '';
+  const st = document.getElementById('filter-tarefa-status')?.value || '';
+  let list = tarefas.filter(t =>
+    (!q || t.titulo.toLowerCase().includes(q)) &&
+    (!prio || t.prioridade === prio) &&
+    (st === '' || (st === 'done' ? t.done : !t.done))
+  );
+
+  const prioClass = p => p === 'Alta' ? 'badge-high' : p === 'Média' ? 'badge-med' : 'badge-low';
+  const prioBar = p => p === 'Alta' ? 'high' : p === 'Média' ? 'med' : 'low';
+
+  const wrap = document.getElementById('tasks-list');
+  if (!list.length) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">◫</div><div class="empty-text">Nenhuma tarefa encontrada</div></div>`;
+    return;
+  }
+  wrap.innerHTML = list.map(t => `
+    <div class="task-card ${t.done ? 'done' : ''}" style="padding-left:22px;">
+      <div class="priority-bar ${prioBar(t.prioridade)}"></div>
+      <div class="task-check ${t.done ? 'checked' : ''}" onclick="toggleTarefa(${t.id})"></div>
+      <div class="task-body">
+        <div class="task-title">${t.titulo}</div>
+        <div class="task-meta">
+          <span class="badge ${prioClass(t.prioridade)}">${t.prioridade}</span>
+          <span class="badge" style="background:rgba(108,99,255,0.1);color:var(--accent);border-color:rgba(108,99,255,0.2)">${t.categoria}</span>
+          ${t.cliente ? `<span style="font-size:0.78rem;color:var(--text3)">@ ${t.cliente}</span>` : ''}
+          ${t.data ? `<span class="task-date">📅 ${t.data}</span>` : ''}
+        </div>
+      </div>
+      <div class="task-actions">
+        <button class="btn btn-ghost btn-sm" onclick="editTarefa(${t.id})">✎</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteTarefa(${t.id})">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════
+function renderDashboard() {
+  document.getElementById('kpi-clientes').textContent = clientes.length;
+  document.getElementById('kpi-tarefas').textContent = tarefas.filter(t => !t.done).length;
+  const done = tarefas.filter(t => t.done).length;
+  document.getElementById('kpi-done').textContent = done;
+
+  // Recent clients table
+  const recent = [...clientes].sort((a,b) => new Date(b.date)-new Date(a.date)).slice(0,3);
+  const statusClass = s => s === 'Ativo' ? 'badge-active' : s === 'Inativo' ? 'badge-inactive' : 'badge-lead';
+  const prioClass = p => p === 'Alta' ? 'badge-high' : p === 'Média' ? 'badge-med' : 'badge-low';
+  document.getElementById('dash-recent-clients').innerHTML = `<table>
+    <thead><tr><th>Nome</th><th>Status</th><th>Prioridade</th><th>Segmento</th></tr></thead>
+    <tbody>${recent.map(c=>`<tr>
+      <td><div class="td-name">${c.nome}</div><div class="td-email">${c.email}</div></td>
+      <td><span class="badge ${statusClass(c.status)}"><span class="badge-dot"></span>${c.status}</span></td>
+      <td><span class="badge ${prioClass(c.prioridade)}">${c.prioridade}</span></td>
+      <td>${c.segmento||'—'}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+
+  // Chart
+  const groups = {};
+  clientes.forEach(c => { groups[c.status] = (groups[c.status]||0)+1; });
+  const max = Math.max(...Object.values(groups), 1);
+  const colors = { Ativo: 'var(--accent3)', Lead: '#ffd700', Inativo: 'var(--text3)' };
+  const chart = document.getElementById('chart-status');
+  const legend = document.getElementById('chart-legend');
+  chart.innerHTML = Object.entries(groups).map(([k,v]) =>
+    `<div class="bar" title="${k}: ${v}" style="height:${Math.max((v/max)*100,8)}%;background:${colors[k]||'var(--accent)'};opacity:0.8;"></div>`
+  ).join('');
+  legend.innerHTML = Object.entries(groups).map(([k,v]) =>
+    `<span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text3);display:flex;align-items:center;gap:5px;">
+      <span style="width:8px;height:8px;border-radius:2px;background:${colors[k]||'var(--accent)'}"></span>${k}: ${v}
+    </span>`
+  ).join('');
+}
+
+function updateBadges() {
+  document.getElementById('badge-clientes').textContent = clientes.length;
+  document.getElementById('badge-tarefas').textContent = tarefas.filter(t=>!t.done).length;
+}
+
+// ═══════════════════════════════════════
+// WEATHER (Open-Meteo — FREE, no key)
+// ═══════════════════════════════════════
+async function fetchWeather() {
+  const icons = { 0:'☀️', 1:'🌤️', 2:'⛅', 3:'☁️', 45:'🌫️', 48:'🌫️', 51:'🌦️', 53:'🌦️', 55:'🌧️', 61:'🌧️', 63:'🌧️', 65:'🌧️', 71:'❄️', 73:'❄️', 75:'❄️', 80:'🌦️', 81:'🌧️', 82:'⛈️', 95:'⛈️', 96:'⛈️', 99:'⛈️' };
+  const descs = { 0:'Céu limpo', 1:'Principalmente limpo', 2:'Parcialmente nublado', 3:'Nublado', 45:'Neblina', 51:'Garoa leve', 61:'Chuva leve', 63:'Chuva moderada', 65:'Chuva intensa', 80:'Pancadas de chuva', 95:'Tempestade', 0:'Céu limpo' };
+  try {
+    // São Paulo coordinates
+    const resp = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-23.55&longitude=-46.63&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&timezone=America%2FSao_Paulo&forecast_days=1');
+    const data = await resp.json();
+    const c = data.current;
+    weatherData = c;
+    const code = c.weather_code;
+    document.getElementById('w-icon').textContent = icons[code] || '🌡️';
+    document.getElementById('w-temp').textContent = Math.round(c.temperature_2m) + '°C';
+    document.getElementById('w-city').textContent = 'São Paulo, BR';
+    document.getElementById('w-desc').textContent = descs[code] || 'Clima variado';
+    document.getElementById('w-humid').textContent = c.relative_humidity_2m + '%';
+    document.getElementById('w-wind').textContent = Math.round(c.wind_speed_10m) + ' km/h';
+    document.getElementById('w-feels').textContent = Math.round(c.apparent_temperature) + '°C';
+    runAIWeather();
+  } catch(e) {
+    showToast('⚠️', 'Erro ao buscar clima: ' + e.message);
+  }
+}
+
+function renderExternalTasks() {
+  const ext = tarefas.filter(t => t.categoria === 'Externo' || t.categoria === 'Reunião');
+  const wrap = document.getElementById('external-tasks');
+  if(!ext.length) { wrap.innerHTML = `<div class="empty-state"><div class="empty-text">Nenhuma tarefa externa cadastrada</div></div>`; return; }
+  const prioClass = p => p === 'Alta' ? 'badge-high' : p === 'Média' ? 'badge-med' : 'badge-low';
+  wrap.innerHTML = ext.map(t => `
+    <div class="task-card">
+      <div class="task-body">
+        <div class="task-title">${t.titulo}</div>
+        <div class="task-meta">
+          <span class="badge ${prioClass(t.prioridade)}">${t.prioridade}</span>
+          <span class="badge" style="background:rgba(108,99,255,0.1);color:var(--accent);border-color:rgba(108,99,255,0.2)">${t.categoria}</span>
+          ${t.data ? `<span class="task-date">📅 ${t.data}</span>` : ''}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════
+// AI FUNCTIONS (Claude API)
+// ═══════════════════════════════════════
+async function callClaude(prompt, targetId) {
+  const el = document.getElementById(targetId);
+  el.innerHTML = `<div class="loading"><div class="ai-spinner"></div> Consultando IA...</div>`;
+  el.className = 'ai-result loading';
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await resp.json();
+    const text = data.content?.map(b => b.text || '').join('') || 'Sem resposta.';
+    el.className = 'ai-result';
+    el.innerHTML = text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>');
+  } catch(e) {
+    el.className = 'ai-result';
+    el.innerHTML = `<span style="color:var(--accent2)">⚠️ Erro ao conectar à API de IA. Verifique sua conexão ou chave de API.</span>`;
+  }
+}
+
+function runAIDashboard() {
+  const ativos = clientes.filter(c=>c.status==='Ativo').length;
+  const leads = clientes.filter(c=>c.status==='Lead').length;
+  const highPrio = tarefas.filter(t=>t.prioridade==='Alta'&&!t.done).length;
+  const prompt = `Você é um assistente de CRM. Gere um resumo executivo breve (4-6 linhas) do estado atual do sistema com estes dados:
+- Total de clientes: ${clientes.length} (${ativos} ativos, ${leads} leads)
+- Tarefas pendentes: ${tarefas.filter(t=>!t.done).length} (${highPrio} de alta prioridade)
+- Tarefas concluídas: ${tarefas.filter(t=>t.done).length}
+Seja direto, use markdown mínimo, destaque o que requer atenção imediata.`;
+  callClaude(prompt, 'ai-dashboard-result');
+}
+
+async function aiResumoCliente(id) {
+  const c = clientes.find(x => x.id === id);
+  const tarefasCliente = tarefas.filter(t => t.cliente === c.nome);
+  const prompt = `Você é um assistente de CRM. Gere um resumo executivo do cliente abaixo em 3-5 linhas, destacando oportunidades e próximos passos recomendados:
+Nome: ${c.nome}
+Email: ${c.email}
+Status: ${c.status}
+Prioridade: ${c.prioridade}
+Segmento: ${c.segmento}
+Histórico: ${c.notas}
+Tarefas vinculadas: ${tarefasCliente.map(t=>t.titulo).join(', ')||'nenhuma'}
+Seja preciso e orientado a ação.`;
+  openModal('modal-ai-client');
+  callClaude(prompt, 'modal-ai-client-result');
+}
+
+function openAIClientPanel() {
+  const panel = document.getElementById('ai-client-panel');
+  panel.style.display = 'block';
+  runAIClients();
+}
+
+function runAIClients() {
+  const lista = clientes.map(c=>`${c.nome} (${c.status}, ${c.prioridade}, ${c.segmento}): ${c.notas.substring(0,80)}`).join('\n');
+  const prompt = `Você é um assistente de CRM. Analise a base de clientes abaixo e forneça:
+1. Um resumo geral da saúde da base
+2. Os 2 clientes que merecem atenção imediata e por quê
+3. Uma recomendação de ação para os próximos 7 dias
+
+Clientes:
+${lista}
+
+Seja direto e use linguagem de negócios.`;
+  const targetId = document.getElementById('ai-full-clients') ? 'ai-full-clients' : 'ai-client-result';
+  callClaude(prompt, targetId);
+  if(document.getElementById('ai-client-result')) callClaude(prompt, 'ai-client-result');
+}
+
+function openAITaskPanel() {
+  const panel = document.getElementById('ai-task-panel');
+  panel.style.display = 'block';
+  runAITasks();
+}
+
+function runAITasks() {
+  const pending = tarefas.filter(t=>!t.done);
+  const lista = pending.map(t=>`- ${t.titulo} | Prioridade: ${t.prioridade} | Prazo: ${t.data||'sem prazo'} | Categoria: ${t.categoria}`).join('\n');
+  const prompt = `Você é um assistente de gestão de tarefas. Analise as tarefas pendentes e sugira uma ordem de execução otimizada:
+
+Tarefas:
+${lista}
+
+Para cada tarefa na ordem sugerida, explique brevemente o motivo em 1 linha. Use o formato:
+1. [Tarefa] — [motivo em 1 linha]
+Foque em urgência, impacto no cliente e dependências.`;
+  const targetId = document.getElementById('ai-full-tasks') ? 'ai-full-tasks' : 'ai-task-result';
+  callClaude(prompt, targetId);
+  if(document.getElementById('ai-task-result')) callClaude(prompt, 'ai-task-result');
+}
+
+async function runAIWeather() {
+  if (!weatherData) return;
+  const code = weatherData.weather_code;
+  const temp = Math.round(weatherData.temperature_2m);
+  const ext = tarefas.filter(t=>t.categoria==='Externo'||t.categoria==='Reunião').map(t=>t.titulo).join(', ');
+  const prompt = `Você é um assistente de CRM. O clima atual em São Paulo é ${temp}°C com código meteorológico ${code}. As seguintes tarefas externas estão agendadas: ${ext||'nenhuma'}. Em 2-3 linhas, avalie o impacto do clima nestas tarefas e sugira ajustes se necessário. Seja prático.`;
+  callClaude(prompt, 'ai-weather-result');
+}
+
+function runAIFree() {
+  const input = document.getElementById('ai-free-input').value.trim();
+  if(!input) { showToast('⚠️','Digite uma pergunta'); return; }
+  const context = `Você é assistente do NexCRM. Dados atuais: ${clientes.length} clientes (${clientes.filter(c=>c.status==='Ativo').length} ativos), ${tarefas.filter(t=>!t.done).length} tarefas pendentes. Clientes: ${clientes.map(c=>c.nome).join(', ')}. `;
+  callClaude(context + 'Pergunta do usuário: ' + input, 'ai-free-result');
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+renderDashboard();
+updateBadges();
+</script>
+</body>
+</html>

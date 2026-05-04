@@ -12,7 +12,7 @@ app.post('/api/gemini', async (req, res) => {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': 'AIzaSyCDT1p-_cUa0SuvOtAYatmPUXcxzzugJow',       // cole sua chave
+      'x-api-key': 'your_api_key_here',       // cole sua chave
       'anthropic-version': '2023-06-01'
     },
     body: JSON.stringify(req.body)
